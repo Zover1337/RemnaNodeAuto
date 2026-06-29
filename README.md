@@ -143,3 +143,68 @@ EOF
 sudo docker exec -it remnanode xray x25519
 ```
 Сохраните выведенные ключи.
+
+---
+
+## 💡 Полезная информация
+
+### Настройка логирования в Xray
+Для записи логов доступа, убедитесь, что в конфигурации Xray указан правильный путь к файлу логов. Пример настройки:
+```json
+"log": {
+  "access": "/var/log/xray/access.log",
+  "loglevel": "info"
+}
+```
+
+### Маршрутизация через WARP (Пример)
+Если вам нужно пустить трафик через WARP, настройте исходящее подключение (`outbounds`) и правила маршрутизации (`routing`) следующим образом:
+
+**Outbounds:**
+```json
+"outbounds": [
+  {
+    "tag": "warp-out",
+    "protocol": "freedom",
+    "settings": {},
+    "streamSettings": {
+      "sockopt": {
+        "interface": "warp",
+        "tcpFastOpen": true
+      }
+    }
+  }
+]
+```
+
+**Routing:**
+```json
+"routing": {
+  "rules": [
+    {
+      "network": "tcp, udp",
+      "outboundTag": "warp-out"
+    }
+  ]
+}
+```
+
+### Конфигурация SELFSTEAL (Reality)
+Пример настройки параметров `realitySettings` для использования со скриптом Selfsteal:
+```json
+"realitySettings": {
+  "dest": "127.0.0.1:9443",
+  "show": false,
+  "xver": 0,
+  "spiderX": "/",
+  "shortIds": [
+    ""
+  ],
+  "publicKey": "Публичный ключ(опционально)",
+  "privateKey": "ПриватныйКлюч",
+  "fingerprint": "фп",
+  "serverNames": [
+    "домен"
+  ]
+}
+```
