@@ -7,7 +7,7 @@
 Вам не нужно ничего скачивать вручную. Просто скопируйте эту команду и вставьте в терминал вашего сервера:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/Zover1337/RemnaNodeAuto/main/setup_node.sh | sudo bash
+bash <(curl -sSL https://raw.githubusercontent.com/Zover1337/RemnaNodeAuto/main/setup_node.sh)
 ```
 
 ## 🛠 Ручная установка (Альтернативный способ)
