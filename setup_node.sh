@@ -11,10 +11,12 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-echo -e "${CYAN}====================================================${NC}"
-echo -e "${CYAN}    Автонастройка сервера для Remnanode & Xray      ${NC}"
-echo -e "${CYAN}====================================================${NC}"
-echo
+install_node() {
+    clear
+    echo -e "${CYAN}====================================================${NC}"
+    echo -e "${CYAN}    Установка сервера для Remnanode & Xray          ${NC}"
+    echo -e "${CYAN}====================================================${NC}"
+    echo
 
 # 1. Запрос параметров у пользователя
 # Домен сервера
@@ -50,12 +52,14 @@ echo
 read -p "Все верно? Нажмите Enter для продолжения или Ctrl+C для отмены..."
 
 # 2. Обновление пакетов и установка базовых зависимостей
-echo -e "\n${YELLOW}[1/10] Обновление пакетов и установка зависимостей...${NC}"
+clear
+echo -e "${YELLOW}[1/10] Обновление пакетов и установка зависимостей...${NC}"
 apt-get update -y
 apt-get install -y curl ufw logrotate sudo git dnsutils
 
 # 3. Настройка TCP BBR и отключение IPv6
-echo -e "\n${YELLOW}[2/10] Настройка TCP BBR и отключение IPv6...${NC}"
+clear
+echo -e "${YELLOW}[2/10] Настройка TCP BBR и отключение IPv6...${NC}"
 
 if ! grep -q "disable_ipv6" /etc/sysctl.conf; then
     echo "net.ipv6.conf.all.disable_ipv6=1" >> /etc/sysctl.conf
@@ -97,7 +101,8 @@ if ! docker compose version &> /dev/null; then
 fi
 
 # 5. Настройка UFW
-echo -e "\n${YELLOW}[3/10] Настройка брандмауэра UFW...${NC}"
+clear
+echo -e "${YELLOW}[3/10] Настройка брандмауэра UFW...${NC}"
 ufw default deny incoming
 ufw default allow outgoing
 
@@ -123,7 +128,8 @@ ufw status verbose
 
 # 6. Настройка SSH порта (если он изменен)
 if [[ "$SSH_PORT" != "22" ]]; then
-    echo -e "\n${YELLOW}[4/10] Настройка SSH демона на порт $SSH_PORT...${NC}"
+    clear
+    echo -e "${YELLOW}[4/10] Настройка SSH демона на порт $SSH_PORT...${NC}"
     if grep -q "^#Port " /etc/ssh/sshd_config || grep -q "^Port " /etc/ssh/sshd_config; then
         sed -i -E "s/^#?Port [0-9]+/Port $SSH_PORT/" /etc/ssh/sshd_config
     else
@@ -134,11 +140,13 @@ if [[ "$SSH_PORT" != "22" ]]; then
 fi
 
 # 7. Установка Fail2Ban
-echo -e "\n${YELLOW}[5/10] Установка Fail2Ban через авто-скрипт...${NC}"
+clear
+echo -e "${YELLOW}[5/10] Установка Fail2Ban через авто-скрипт...${NC}"
 bash <(curl -s https://raw.githubusercontent.com/Zover1337/Fail2Ban-AUTO/refs/heads/main/fail2ban-install.sh)
 
 # 8. Установка Caddy Selfsteal
-echo -e "\n${YELLOW}[6/10] Установка Caddy Selfsteal...${NC}"
+clear
+echo -e "${YELLOW}[6/10] Установка Caddy Selfsteal...${NC}"
 # Перед запуском проверяем DNS-запись домена, чтобы минимизировать ошибки DNS-проверки в скрипте selfsteal
 SERVER_IP=$(curl -s https://ipinfo.io/ip || curl -s https://api.ipify.org || curl -s https://ifconfig.me)
 DOMAIN_IP=$(dig +short A "$DOMAIN" 2>/dev/null | tail -n1)
@@ -156,7 +164,8 @@ fi
 printf "%s\n1\n9443\ny\n" "$DOMAIN" | bash <(curl -Ls https://github.com/DigneZzZ/remnawave-scripts/raw/main/selfsteal.sh) @ install
 
 # 9. Настройка Remnanode (Docker)
-echo -e "\n${YELLOW}[7/10] Настройка Remnanode...${NC}"
+clear
+echo -e "${YELLOW}[7/10] Настройка Remnanode...${NC}"
 mkdir -p /opt/remnanode
 mkdir -p /var/log/xray
 chmod 777 /var/log/xray
@@ -194,7 +203,8 @@ docker compose up -d
 docker compose ps
 
 # 10. Настройка ротации логов для xray
-echo -e "\n${YELLOW}[8/10] Настройка Logrotate для логов xray...${NC}"
+clear
+echo -e "${YELLOW}[8/10] Настройка Logrotate для логов xray...${NC}"
 cat << 'EOF' > /etc/logrotate.d/xray
 /var/log/xray/*.log {
       size 50M
@@ -208,7 +218,8 @@ EOF
 echo -e "${GREEN}Ротация логов настроена (/etc/logrotate.d/xray).${NC}"
 
 # 11. Установка Traffic Guard
-echo -e "\n${YELLOW}[9/10] Установка и запуск Traffic Guard...${NC}"
+clear
+echo -e "${YELLOW}[9/10] Установка и запуск Traffic Guard...${NC}"
 curl -fsSL https://raw.githubusercontent.com/dotX12/traffic-guard/master/install.sh | sudo bash
 
 sudo traffic-guard full \
@@ -218,14 +229,17 @@ sudo traffic-guard full \
 
 # 12. Установка WARP (если выбран)
 if [[ "$INSTALL_WARP" =~ ^[Yy]$ ]]; then
-    echo -e "\n${YELLOW}[10/10] Установка Cloudflare WARP...${NC}"
+    clear
+    echo -e "${YELLOW}[10/10] Установка Cloudflare WARP...${NC}"
     bash <(curl -fsSL https://raw.githubusercontent.com/distillium/warp-native/main/install.sh)
 else
-    echo -e "\n${GREEN}[10/10] Установка WARP пропущена.${NC}"
+    clear
+    echo -e "${GREEN}[10/10] Установка WARP пропущена.${NC}"
 fi
 
 # 13. Генерация ключей x25519 (Reality) для Xray
-echo -e "\n${YELLOW}Ожидание запуска контейнера и генерация Reality ключей...${NC}"
+clear
+echo -e "${YELLOW}Ожидание запуска контейнера и генерация Reality ключей...${NC}"
 sleep 5
 XRAY_KEYS=$(docker exec remnanode xray x25519 2>/dev/null)
 
@@ -248,3 +262,61 @@ fi
 
 echo -e "\nПроверка логов контейнера: ${CYAN}docker compose -f /opt/remnanode/docker-compose.yml logs -f${NC}"
 echo -e "${GREEN}====================================================${NC}"
+read -p "Нажмите Enter для возврата в меню..."
+}
+
+restart_node() {
+    if [[ -d "/opt/remnanode" ]]; then
+        echo -e "${YELLOW}Перезапуск Remnanode...${NC}"
+        cd /opt/remnanode && docker compose restart
+        echo -e "${GREEN}Готово!${NC}"
+        read -p "Нажмите Enter для возврата в меню..."
+    else
+        echo -e "${RED}Нода не установлена (/opt/remnanode не найдена).${NC}"
+        read -p "Нажмите Enter для возврата в меню..."
+    fi
+}
+
+view_keys() {
+    echo -e "${YELLOW}Ключи Reality (x25519):${NC}"
+    docker exec remnanode xray x25519 2>/dev/null || echo -e "${RED}Контейнер не запущен или не установлен.${NC}"
+    read -p "Нажмите Enter для возврата в меню..."
+}
+
+view_logs() {
+    if [[ -d "/opt/remnanode" ]]; then
+        echo -e "${YELLOW}Для выхода из просмотра логов нажмите Ctrl+C.${NC}"
+        sleep 2
+        cd /opt/remnanode && docker compose logs --tail=50 -f
+    else
+        echo -e "${RED}Нода не установлена.${NC}"
+        read -p "Нажмите Enter для возврата в меню..."
+    fi
+}
+
+show_menu() {
+    while true; do
+        clear
+        echo -e "${CYAN}====================================================${NC}"
+        echo -e "${CYAN}    Меню управления сервером Remnanode & Xray       ${NC}"
+        echo -e "${CYAN}====================================================${NC}"
+        echo -e "${GREEN}1.${NC} Установить ноду"
+        echo -e "${GREEN}2.${NC} Перезапустить ноду"
+        echo -e "${GREEN}3.${NC} Посмотреть логи"
+        echo -e "${GREEN}4.${NC} Посмотреть Reality ключи"
+        echo -e "${GREEN}0.${NC} Выход"
+        echo -e "${CYAN}====================================================${NC}"
+        read -p "Выберите действие (0-4): " choice
+
+        case $choice in
+            1) install_node ;;
+            2) restart_node ;;
+            3) view_logs ;;
+            4) view_keys ;;
+            0) echo -e "${GREEN}Выход...${NC}"; exit 0 ;;
+            *) echo -e "${RED}Неверный выбор, попробуйте еще раз.${NC}"; sleep 1 ;;
+        esac
+    done
+}
+
+show_menu
